@@ -13,9 +13,9 @@ object Common {
   )
 
   val settings: Seq[Setting[_]] = ls.Plugin.lsSettings ++ Seq(
-    version := "0.11.3",
+    version := "0.11.3.1",
 
-    crossScalaVersions := Seq("2.10.4", "2.11.5"),
+    crossScalaVersions := Seq("2.10.4", "2.11.7"),
 
     scalaVersion := defaultScalaVersion,
 
@@ -27,12 +27,14 @@ object Common {
     publishMavenStyle := true,
 
     publishTo <<= version { (v: String) =>
-      val nexus = "https://oss.sonatype.org/"
+      val nexus = "http://dev-install-1.sscorp:8081/artifactory/"
       if (v.trim.endsWith("SNAPSHOT")) 
-        Some("snapshots" at nexus + "content/repositories/snapshots") 
+        Some("snapshots" at nexus + "libs-snapshots-local")
       else
-        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+        Some("releases"  at nexus + "libs-releases-local")
     },
+
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
 
     publishArtifact in Test := false,
 
@@ -40,8 +42,8 @@ object Common {
 
     pomExtra := (
       <scm>
-        <url>git@github.com:dispatch/reboot.git</url>
-        <connection>scm:git:git@github.com:dispatch/reboot.git</connection>
+        <url>git@github.com:tremorvideo/reboot.git</url>
+          <connection>scm:git:git@github.com:tremorvideo/reboot.git</connection>
       </scm>
       <developers>
         <developer>
