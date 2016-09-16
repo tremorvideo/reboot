@@ -1,13 +1,10 @@
 package dispatch.oauth
 
-import java.util
-
-import com.ning.http.client.Param
 import dispatch._
+import org.asynchttpclient.oauth.{RequestToken, ConsumerKey}
+import org.asynchttpclient.util.Base64
 
 import scala.concurrent.{Future,ExecutionContext}
-import com.ning.http.client.oauth._
-import com.ning.http.client.uri.Uri
 
 trait SomeHttp {
   def http: HttpExecutor
@@ -38,7 +35,7 @@ trait Exchange {
 
   def generateNonce = nonceBuffer.synchronized {
     random.nextBytes(nonceBuffer)
-    com.ning.http.util.Base64.encode(nonceBuffer)
+    Base64.encode(nonceBuffer)
   }
 
   def message[A](promised: Future[A], ctx: String)
@@ -55,20 +52,6 @@ trait Exchange {
         > as.oauth.Token
     )
     for (eth <- message(promised, "request token")) yield eth.joinRight
-  }
-
-  def signedAuthorize(reqToken: RequestToken) = {
-
-    val calc = new OAuthSignatureCalculator(consumer, reqToken)
-    val timestamp = System.currentTimeMillis() / 1000L
-    val unsigned = url(authorize) <<? Map("oauth_token" -> reqToken.getKey)
-    val sig = calc.calculateSignature("GET",
-                                      Uri.create(unsigned.url),
-                                      timestamp,
-                                      generateNonce,
-                                      new util.ArrayList[Param](),
-                                      new util.ArrayList[Param]())
-    (unsigned <<? Map("oauth_signature" -> sig)).url
   }
 
   def fetchAccessToken(reqToken: RequestToken, verifier: String)

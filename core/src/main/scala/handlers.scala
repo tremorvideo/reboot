@@ -1,10 +1,6 @@
 package dispatch
 
-import com.ning.http.client
-import client.{
-  Response, AsyncCompletionHandler, AsyncHandler,
-  HttpResponseStatus
-}
+import org.asynchttpclient.{HttpResponseStatus, AsyncCompletionHandler, AsyncHandler, Response}
 
 /**
  * Builds tuples of (Request, AsyncHandler) for passing to Http#apply.

@@ -1,7 +1,6 @@
 package dispatch
 
-import com.ning.http.client.{FluentStringsMap, BodyGenerator, RequestBuilder}
-import com.ning.http.client.multipart.Part
+import org.asynchttpclient.RequestBuilder
 
 /** This wrapper provides referential transparency for the
   underlying RequestBuilder. */
@@ -19,7 +18,7 @@ with AuthVerbs with HeaderVerbs with RequestBuilderVerbs {
   def toRequestBuilder = {
     val requestBuilder = run(new RequestBuilder)
     //Body set from String and with no Content-Type will get a default of 'text/plain; charset=UTF-8'
-    if(props.bodyType == Req.StringBody && !requestBuilder.build.getHeaders.containsKey("Content-Type")) {
+    if(props.bodyType == Req.StringBody && !requestBuilder.build.getHeaders.contains("Content-Type")) {
       setContentType("text/plain", "UTF-8").run(new RequestBuilder)
     } else {
       requestBuilder
@@ -142,17 +141,13 @@ trait ParamVerbs extends RequestVerbs {
 }
 
 trait AuthVerbs extends RequestVerbs {
-  import com.ning.http.client.Realm, Realm.{RealmBuilder,AuthScheme}
+  import org.asynchttpclient.Realm, Realm.{Builder,AuthScheme}
   def as(user: String, password: String): Req =
-    this.as(new RealmBuilder()
-      .setPrincipal(user)
-      .setPassword(password)
+    this.as(new Builder(user, password)
       .build())
   /** Basic auth, use with care. */
   def as_!(user: String, password: String): Req =
-    this.as(new RealmBuilder()
-      .setPrincipal(user)
-      .setPassword(password)
+    this.as(new Builder(user, password)
       .setUsePreemptiveAuth(true)
       .setScheme(AuthScheme.BASIC)
       .build())
@@ -162,8 +157,11 @@ trait AuthVerbs extends RequestVerbs {
 }
 
 trait RequestBuilderVerbs extends RequestVerbs {
-  import com.ning.http.client.{ ProxyServer, Realm }
-  import com.ning.http.client.cookie.Cookie
+  import org.asynchttpclient.Realm
+  import org.asynchttpclient.cookie.Cookie
+  import org.asynchttpclient.proxy.ProxyServer
+  import org.asynchttpclient.request.body.multipart.Part
+  import org.asynchttpclient.request.body.generator.BodyGenerator
   import scala.collection.JavaConverters._
   import java.util.Collection
 
@@ -178,9 +176,7 @@ trait RequestBuilderVerbs extends RequestVerbs {
   def addQueryParameter(name: String, value: String) =
     subject.underlying { _.addQueryParam(name, value) }
   def setQueryParameters(params: Map[String, Seq[String]]) =
-    subject.underlying { _.setQueryParams(new FluentStringsMap(
-      params.mapValues{ _.asJava: Collection[String] }.asJava
-    )) }
+    subject.underlying { rb => rb.setQueryParams(params.map(p => p._1 -> p._2.toList.asJava).asJava)}
   def setBody(data: Array[Byte]) =
     subject.underlying(rb => rb.setBody(data), p => p.copy(bodyType = Req.ByteArrayBody))
   def setBody(dataWriter: BodyGenerator, length: Long) =
@@ -191,12 +187,9 @@ trait RequestBuilderVerbs extends RequestVerbs {
     subject.underlying(rb => rb.setBody(data), p => p.copy(bodyType = Req.StringBody))
   def setBody(file: java.io.File) =
     subject.underlying(rb => rb.setBody(file), p => p.copy(bodyType = Req.FileBody))
-  def setBodyEncoding(charset: String) =
-    subject.underlying { _.setBodyEncoding(charset) }
   def setContentType(mediaType: String, charset: String) =
     subject.underlying {
-      _.setHeader("Content-Type", mediaType + "; charset=" + charset).
-      setBodyEncoding(charset)
+      _.setHeader("Content-Type", mediaType + "; charset=" + charset)
     }
   def setHeader(name: String, value: String) =
     subject.underlying { _.setHeader(name, value) }
@@ -217,7 +210,7 @@ trait RequestBuilderVerbs extends RequestVerbs {
   def setVirtualHost(virtualHost: String) =
     subject.underlying { _.setVirtualHost(virtualHost) }
   def setFollowRedirects(followRedirects: Boolean) =
-    subject.underlying { _.setFollowRedirects(followRedirects) }
+    subject.underlying { _.setFollowRedirect(followRedirects) }
   def addOrReplaceCookie(cookie: Cookie) =
     subject.underlying { _.addOrReplaceCookie(cookie) }
   def setRealm(realm: Realm) =

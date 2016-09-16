@@ -1,8 +1,8 @@
-import com.ning.http.client.RequestBuilder
+import org.asynchttpclient.RequestBuilder
 
 package object dispatch {
   /** Type alias for Response, avoid need to import */
-  type Res = com.ning.http.client.Response
+  type Res = org.asynchttpclient.Response
   /** Type alias for URI, avoid need to import */
   type Uri = java.net.URI
 

@@ -1,13 +1,10 @@
 package dispatch
 
-import org.jboss.netty.util.{Timer, HashedWheelTimer}
-import org.jboss.netty.channel.socket.nio.{
-  NioClientSocketChannelFactory, NioWorkerPool}
+import io.netty.bootstrap.ServerBootstrap
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.util.{Timer, HashedWheelTimer}
+import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig}
 import java.util.{concurrent => juc}
-import com.ning.http.client.{
-  AsyncHttpClient, AsyncHttpClientConfig
-}
-import com.ning.http.client.providers.netty.NettyAsyncHttpProviderConfig
 
 object Defaults {
   implicit def executor = scala.concurrent.ExecutionContext.Implicits.global
@@ -28,18 +25,18 @@ private [dispatch] object InternalDefaults {
     if (inSbt) SbtProcessDefaults
     else BasicDefaults
 
-  def client = new AsyncHttpClient(underlying.builder.build())
+  def client = new DefaultAsyncHttpClient(underlying.builder.build())
   lazy val timer = underlying.timer
 
   private trait Defaults {
-    def builder: AsyncHttpClientConfig.Builder
+    def builder: DefaultAsyncHttpClientConfig.Builder
     def timer: Timer
   }
 
   /** Sets a user agent, no timeout for requests  */
   private object BasicDefaults extends Defaults {
     lazy val timer = new HashedWheelTimer()
-    def builder = new AsyncHttpClientConfig.Builder()
+    def builder = new DefaultAsyncHttpClientConfig.Builder()
       .setUserAgent("Dispatch/%s" format BuildInfo.version)
       .setRequestTimeout(-1) // don't timeout streaming connections
   }
@@ -49,12 +46,19 @@ private [dispatch] object InternalDefaults {
     def builder = {
       val shuttingDown = new juc.atomic.AtomicBoolean(false)
 
+      val workerCount = 2 * Runtime.getRuntime().availableProcessors()
+      lazy val eventLoopGroup = new NioEventLoopGroup(
+        workerCount
+//        juc.Executors.newCachedThreadPool(interruptThreadFactory)
+      )
+
       def shutdown() {
         if (shuttingDown.compareAndSet(false, true)) {
-          nioClientSocketChannelFactory.releaseExternalResources()
+          eventLoopGroup.shutdownGracefully()
           timer.stop()
         }
       }
+
       /** daemon threads that also shut down everything when interrupted! */
       lazy val interruptThreadFactory = new juc.ThreadFactory {
         def newThread(runnable: Runnable) = {
@@ -68,27 +72,19 @@ private [dispatch] object InternalDefaults {
           }
         }
       }
-      lazy val nioClientSocketChannelFactory = {
-        val workerCount = 2 * Runtime.getRuntime().availableProcessors()
-        new NioClientSocketChannelFactory(
-          juc.Executors.newCachedThreadPool(interruptThreadFactory),
-          1,
-          new NioWorkerPool(
-            juc.Executors.newCachedThreadPool(interruptThreadFactory),
-            workerCount
-          ),
-          timer
-        )
+
+      val nioClientSocketChannelFactory = {
+        val b = new ServerBootstrap()
+        b.group(eventLoopGroup)
       }
 
-      val config = new NettyAsyncHttpProviderConfig().addProperty(
-        "socketChannelFactory",
-        nioClientSocketChannelFactory
-      )
-      config.setNettyTimer(timer)
-      BasicDefaults.builder.setAsyncHttpClientProviderConfig(config)
+      BasicDefaults.builder
+        .setNettyTimer(timer)
+        .setEventLoopGroup(eventLoopGroup)
     }
     lazy val timer = new HashedWheelTimer(DaemonThreads.factory)
+
+
   }
 }
 

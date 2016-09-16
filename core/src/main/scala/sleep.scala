@@ -1,9 +1,11 @@
 package dispatch
 
-import org.jboss.netty.util.{TimerTask, Timeout, Timer}
+import io.netty.util.{Timeout, TimerTask, Timer}
+
 import scala.concurrent.{ExecutionContext}
 import scala.concurrent.duration.Duration
-import java.util.{concurrent => juc}
+
+import scala.util.Try
 
 object SleepFuture {
   def apply[T](d: Duration)(todo: => T)
@@ -13,7 +15,7 @@ object SleepFuture {
 
     val sleepTimeout = timer.newTimeout(new TimerTask {
       def run(timeout: Timeout) {
-        promise.complete(util.Try(todo))
+        promise.complete(Try(todo))
       }
     }, d.length, d.unit)
 

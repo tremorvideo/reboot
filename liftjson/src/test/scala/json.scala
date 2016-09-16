@@ -1,10 +1,10 @@
 package dispatch.spec
 
+import org.asynchttpclient.Response
 import org.scalacheck._
 import net.liftweb.json._
 import JsonDSL._
 import dispatch._
-import com.ning.http.client._
 import org.mockito.Mockito._
 
 object BasicSpecification extends Properties("Lift Json") {

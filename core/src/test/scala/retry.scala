@@ -1,5 +1,6 @@
 package dispatch.spec
 
+import io.netty.util.{HashedWheelTimer, Timer}
 import org.scalacheck._
 
 object RetrySpecification
@@ -23,7 +24,6 @@ with DispatchCleanup {
   import scala.concurrent.duration.Duration
   import java.util.concurrent.TimeUnit
 
-  import org.jboss.netty.util.{Timer, HashedWheelTimer}
   // We're using a very fine grained timer, and short retry intervals,
   // to keep the tests fast. These are unlikely to be good settings
   // for an application.

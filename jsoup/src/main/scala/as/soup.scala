@@ -1,8 +1,8 @@
 package dispatch.as.jsoup
 
+import org.asynchttpclient.Response
 import org.jsoup.Jsoup
 import org.jsoup.nodes
-import com.ning.http.client.Response
 
 object Document extends (Response => nodes.Document) {
   def apply(r: Response) =
