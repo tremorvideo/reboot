@@ -13,7 +13,7 @@ object Common {
   )
 
   val settings: Seq[Setting[_]] = ls.Plugin.lsSettings ++ Seq(
-    version := "0.11.3.1",
+    version := "0.11.4",
 
     crossScalaVersions := Seq("2.10.4", "2.11.7"),
 
