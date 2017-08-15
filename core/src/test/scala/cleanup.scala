@@ -3,8 +3,8 @@ package dispatch.spec
 trait DispatchCleanup extends unfiltered.spec.ServerCleanup {
   implicit def executor = dispatch.Defaults.executor
 
-  override def cleanup() {
+  override def cleanup() = {
     super.cleanup()
-    dispatch.Http.shutdown()
+    dispatch.Http.default.shutdown()
   }
 }

@@ -5,9 +5,12 @@ description :=
 
 Seq(lsSettings :_*)
 
+val json4sVersion = "3.5.1"
+
 libraryDependencies ++= Seq(
-  "org.json4s" %% "json4s-core" % "3.2.11",
-  "org.json4s" %% "json4s-native" % "3.2.11",
-  "net.databinder" %% "unfiltered-netty" % "0.8.4" % "test"
+  "org.json4s" %% "json4s-core" % json4sVersion,
+  "org.json4s" %% "json4s-native" % json4sVersion,
+  "net.databinder" %% "unfiltered-netty-server" % "0.8.4" % "test" excludeAll ExclusionRule(organization = "io.netty")
 )
 
+resolvers += "Farmdawg's Temp Forks" at "https://dl.bintray.com/farmdawgnation/temp-forks"

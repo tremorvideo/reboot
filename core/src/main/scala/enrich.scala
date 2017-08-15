@@ -1,11 +1,7 @@
 package dispatch
 
-import com.ning.http.client.ListenableFuture
-import java.util.{concurrent => juc}
-import juc.TimeUnit
 import scala.concurrent.{ExecutionContext,Await,ExecutionException}
 import scala.concurrent.duration.Duration
-import scala.util.control.Exception.{allCatch,catching}
 
 class EnrichedFuture[A](underlying: Future[A]) {
 
@@ -68,10 +64,10 @@ class EnrichedFuture[A](underlying: Future[A]) {
 object EnrichedFuture {
   /** Execute on the current thread, for certain cpu-bound operations */
   private val currentThreadContext = new ExecutionContext {
-    def execute(runnable: Runnable) {
+    def execute(runnable: Runnable) = {
       runnable.run()
     }
-    def reportFailure(t: Throwable) {
+    def reportFailure(t: Throwable) = {
       ExecutionContext.defaultReporter(t)
     }
   }

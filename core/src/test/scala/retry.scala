@@ -8,7 +8,7 @@ with DispatchCleanup {
   import Prop.{forAll,AnyOperators}
   import Gen._
 
-  val server = { 
+  val server = {
     import unfiltered.netty
     import unfiltered.response._
     import unfiltered.request._
@@ -23,7 +23,7 @@ with DispatchCleanup {
   import scala.concurrent.duration.Duration
   import java.util.concurrent.TimeUnit
 
-  import org.jboss.netty.util.{Timer, HashedWheelTimer}
+  import io.netty.util.{Timer, HashedWheelTimer}
   // We're using a very fine grained timer, and short retry intervals,
   // to keep the tests fast. These are unlikely to be good settings
   // for an application.
@@ -39,7 +39,7 @@ with DispatchCleanup {
   class RetryCounter {
     private val retried = new java.util.concurrent.atomic.AtomicInteger
     def succeedOn(successRetry: Int)() = {
-      Http(localhost << Map("echo" -> retried.getAndIncrement.toString)
+      Http.default(localhost << Map("echo" -> retried.getAndIncrement.toString)
            OK as.String).either.map { eth =>
         eth.right.flatMap { numstr =>
           val num = numstr.toInt

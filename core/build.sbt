@@ -1,16 +1,16 @@
 name := "dispatch-core"
 
 description :=
-  "Core Dispatch module wrapping sonatype/async-http-client"
+  "Core Dispatch module wrapping async-http-client"
 
 libraryDependencies +=
-  "com.ning" % "async-http-client" % "1.9.11"
+  "org.asynchttpclient" % "async-http-client" % "2.0.33"
 
 Seq(lsSettings :_*)
 
 Seq(buildInfoSettings:_*)
 
-sourceGenerators in Compile <+= buildInfo
+sourceGenerators in Compile += buildInfo.taskValue
 
 buildInfoKeys := Seq[BuildInfoKey](version)
 

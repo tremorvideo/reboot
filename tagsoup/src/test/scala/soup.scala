@@ -23,10 +23,10 @@ with DispatchCleanup {
   def localhost = host("127.0.0.1", server.port)
 
   property("handle documents") = forAll(Gen.alphaStr) { (sample: String) =>
-    val doc = Http(
+    val doc = Http.default(
       localhost / "echo" <<? Map("echo" -> sample) > as.tagsoup.NodeSeq
     )
-    (doc() \\ "div" find (n => (n \ "@id" text) == "echo") map (_.text) mkString) == (sample)
+    (doc() \\ "div").find (n => (n \ "@id").text == "echo").map (_.text) .mkString == (sample)
   }
 
 }
