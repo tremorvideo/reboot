@@ -1,11 +1,12 @@
 import sbt._
 
 object Common {
+
   import Keys._
 
   val defaultScalaVersion = "2.11.7"
 
-  val testSettings:Seq[Setting[_]] = Seq(
+  val testSettings: Seq[Setting[_]] = Seq(
     testOptions in Test += Tests.Cleanup { loader =>
       val c = loader.loadClass("unfiltered.spec.Cleanup$")
       c.getMethod("cleanup").invoke(c.getField("MODULE$").get(c))
@@ -13,7 +14,7 @@ object Common {
   )
 
   val settings: Seq[Setting[_]] = ls.Plugin.lsSettings ++ Seq(
-    version := "0.11.4",
+    version := "0.11.4.1",
 
     crossScalaVersions := Seq("2.10.4", "2.11.7"),
 
@@ -26,12 +27,13 @@ object Common {
 
     publishMavenStyle := true,
 
-    publishTo <<= version { (v: String) =>
-      val nexus = "http://dev-install-1.sscorp:8081/artifactory/"
-      if (v.trim.endsWith("SNAPSHOT")) 
-        Some("snapshots" at nexus + "libs-snapshots-local")
+    publishTo := {
+      val artifactory = "http://artifactory.service.iad1.consul:8081/artifactory/"
+      val (name, url) = if (version.value.contains("-SNAPSHOT"))
+        ("sbt-snapshots", artifactory + "libs-snapshot")
       else
-        Some("releases"  at nexus + "libs-releases-local")
+        ("sbt-releases", artifactory + "libs-release")
+      Some(Resolver.url(name, new URL(url)))
     },
 
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
@@ -43,14 +45,14 @@ object Common {
     pomExtra := (
       <scm>
         <url>git@github.com:tremorvideo/reboot.git</url>
-          <connection>scm:git:git@github.com:tremorvideo/reboot.git</connection>
+        <connection>scm:git:git@github.com:tremorvideo/reboot.git</connection>
       </scm>
-      <developers>
-        <developer>
-          <id>n8han</id>
-          <name>Nathan Hamblen</name>
-          <url>http://twitter.com/n8han</url>
-        </developer>
-      </developers>)
+        <developers>
+          <developer>
+            <id>n8han</id>
+            <name>Nathan Hamblen</name>
+            <url>http://twitter.com/n8han</url>
+          </developer>
+        </developers>)
   )
 }
